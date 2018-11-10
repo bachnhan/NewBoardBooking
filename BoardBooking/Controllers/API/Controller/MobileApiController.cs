@@ -7,6 +7,7 @@ using Jose;
 using HmsService.Models;
 using HmsService.Sdk;
 using BoardBooking.Controllers.API;
+using HmsService.ViewModels;
 
 namespace BoardBooking.Controllers
 {
@@ -48,5 +49,173 @@ namespace BoardBooking.Controllers
             string[] parts = key.Split(new char[] { ':' });
             return parts[0];
         }
+
+        // User Manager
+
+        [HttpGet]
+        [Route("api/get-user")]
+        public tbCustomerViewModel GetInfoUser(string phone, string password)
+        {
+            var customerApi = new tbCustomerApi();
+            var customer = customerApi.Get().Where(q => q.CPhone == phone && q.CPassword == password).FirstOrDefault();
+            if (customer == null)
+            {
+                return customer;
+            }
+            return null;
+        }
+
+        [HttpGet]
+        [Route("api/list-store")]
+        public List<tbStoreViewModel> GetListStore()
+        {
+            var storeApi = new tbStoreApi();
+            var stores = storeApi.Get().ToList();
+            if (stores != null)
+            {
+                return stores;
+            }
+            return null;
+        }
+
+        [HttpGet]
+        [Route("api/info-store")]
+        public tbStoreViewModel GetInfoStore(int storeId)
+        {
+            var storeApi = new tbStoreApi();
+            var store = storeApi.Get().Where(q => q.SID == storeId).FirstOrDefault();
+            if (store == null)
+            {
+                return null;
+            }
+            return store;
+        }
+
+        [HttpGet]
+        [Route("api/list-review")]
+        public List<tbReviewViewModel> GetListReviewStore(int storeId)
+        {
+            var reviewApi = new tbReviewApi();
+            var reviews = reviewApi.Get().Where(q => q.SID == storeId).ToList();
+            if (reviews == null)
+            {
+                return null;
+            }
+            return reviews;
+        }
+
+        [HttpGet]
+        [Route("api/list-promotion")]
+        public List<tbPromotionViewModel> GetListPromotion()
+        {
+            var promotionApi = new tbPromotionApi();
+            var promotions = promotionApi.Get().ToList();
+            return promotions;
+        }
+
+        [HttpGet]
+        [Route("api/list-session-inrange")]
+        public List<tbSessionViewModel> GetListSessionStoreInRange(int storeId, DateTime day)
+        {
+            var sessionApi = new tbSessionApi();
+            var sessions = sessionApi.Get().Where(q => q.SID == storeId && q.DayCreate >= day).ToList();
+            if (sessions == null)
+            {
+                return null;
+            }
+            return sessions;
+        }
+
+        [HttpPost]
+        [Route("api/customer")]
+        public bool CreateNewCustmer(tbCustomerViewModel customer)
+        {
+            var customerApi = new tbCustomerApi();
+            var check = customerApi.Get().Where(q => q.CPhone == customer.CPhone).FirstOrDefault();
+            if (check != null)
+            {
+                var result = customerApi.CreateCustomer(customer);
+                if (result)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        [HttpPost]
+        [Route("api/create-appointment")]
+        public bool CreateNewAppointment(tbAppointmentViewModel model)
+        {
+            var appointmentApi = new tbAppointmentApi();
+            var sessionApi = new tbSessionApi();
+            var check = sessionApi.Get().Where(q => q.SsID == model.SsID && q.Capital >= model.ACapital).FirstOrDefault();
+            if (check != null)
+            {
+                var result = appointmentApi.CreateAppointment(model);
+                check.Capital = check.Capital - model.ACapital; ;
+                //sessionApi.UpdateSesion(check);
+                return true;
+            }
+            return false;
+        }
+
+        [HttpPost]
+        [Route("api/create-review")]
+        public bool CreateNewReview(tbReviewViewModel model)
+        {
+            var reviewApi = new tbReviewApi();
+            var check = reviewApi.CreateReview(model);
+            if (check) return true;
+            return false;
+        }
+        // Manager API
+
+        [HttpGet]
+        [Route("api/get-store")]
+        public tbStoreViewModel GetStoreIdLoginManager(string phone, string password)
+        {
+            var customerApi = new tbCustomerApi();
+            var storeApi = new tbStoreApi();
+            var customer = customerApi.Get().Where(q => q.CPhone == phone && q.CPassword == password).FirstOrDefault();
+            var checkStore = storeApi.Get().Where(q => q.CPhone == phone).FirstOrDefault();
+            if (customer == null)
+            {
+                return null;
+            }
+            else if (checkStore == null)
+            {
+                return null;
+            }
+            return checkStore;
+        }
+
+        [HttpGet]
+        [Route("api/get-appoinment-store")]
+        public List<tbAppointmentViewModel> GetListAppointmentFromToday(int storeId)
+        {
+            var appointmentApi = new tbAppointmentApi();
+            var sessionApi = new tbSessionApi();
+            DateTime now = DateTime.Now;
+            var sessions = sessionApi.Get().Where(q => q.SID == storeId && q.DayCreate >= now).ToList();
+            List<tbAppointmentViewModel> result = new List<tbAppointmentViewModel>();
+            foreach (var item in sessions)
+            {
+                var appointments = appointmentApi.Get().Where(q => q.SsID == item.SsID).ToList();
+                result.AddRange(appointments);
+            }
+            return result;
+        }
+
+        [HttpGet]
+        [Route("api/get_session")]
+        public List<tbSessionViewModel> GetListSessionFromToday(int storeId)
+        {
+            var sessionApi = new tbSessionApi();
+            DateTime now = DateTime.Now;
+            var listSession = sessionApi.Get().Where(q => q.SID == storeId && q.DayCreate >= now).ToList();
+            return listSession;
+        }
+
     }
 }
