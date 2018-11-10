@@ -50,21 +50,23 @@ namespace BoardBooking.Controllers
             return parts[0];
         }
 
-        // User Manager
+        // User API
 
+        //checked
         [HttpGet]
         [Route("api/get-user")]
         public tbCustomerViewModel GetInfoUser(string phone, string password)
         {
             var customerApi = new tbCustomerApi();
             var customer = customerApi.Get().Where(q => q.CPhone == phone && q.CPassword == password).FirstOrDefault();
-            if (customer == null)
+            if (customer != null)
             {
                 return customer;
             }
             return null;
         }
 
+        //checked
         [HttpGet]
         [Route("api/list-store")]
         public List<tbStoreViewModel> GetListStore()
@@ -78,6 +80,7 @@ namespace BoardBooking.Controllers
             return null;
         }
 
+        //checked
         [HttpGet]
         [Route("api/info-store")]
         public tbStoreViewModel GetInfoStore(int storeId)
@@ -91,6 +94,7 @@ namespace BoardBooking.Controllers
             return store;
         }
 
+        //checked
         [HttpGet]
         [Route("api/list-review")]
         public List<tbReviewViewModel> GetListReviewStore(int storeId)
@@ -104,6 +108,7 @@ namespace BoardBooking.Controllers
             return reviews;
         }
 
+        //checked
         [HttpGet]
         [Route("api/list-promotion")]
         public List<tbPromotionViewModel> GetListPromotion()
@@ -113,12 +118,14 @@ namespace BoardBooking.Controllers
             return promotions;
         }
 
+        //checked
         [HttpGet]
-        [Route("api/list-session-inrange")]
-        public List<tbSessionViewModel> GetListSessionStoreInRange(int storeId, DateTime day)
+        [Route("api/list-session")]
+        public List<tbSessionViewModel> GetListSessionStoreInRange(int storeId)
         {
             var sessionApi = new tbSessionApi();
-            var sessions = sessionApi.Get().Where(q => q.SID == storeId && q.DayCreate >= day).ToList();
+            DateTime now = DateTime.Now;
+            var sessions = sessionApi.Get().Where(q => q.SID == storeId && q.DayCreate >= now).ToList();
             if (sessions == null)
             {
                 return null;
@@ -126,13 +133,14 @@ namespace BoardBooking.Controllers
             return sessions;
         }
 
+        //checked
         [HttpPost]
         [Route("api/customer")]
         public bool CreateNewCustmer(tbCustomerViewModel customer)
         {
             var customerApi = new tbCustomerApi();
             var check = customerApi.Get().Where(q => q.CPhone == customer.CPhone).FirstOrDefault();
-            if (check != null)
+            if (check == null)
             {
                 var result = customerApi.CreateCustomer(customer);
                 if (result)
@@ -143,6 +151,7 @@ namespace BoardBooking.Controllers
             return false;
         }
 
+        //unchecked
         [HttpPost]
         [Route("api/create-appointment")]
         public bool CreateNewAppointment(tbAppointmentViewModel model)
@@ -160,6 +169,7 @@ namespace BoardBooking.Controllers
             return false;
         }
 
+        //uncheck
         [HttpPost]
         [Route("api/create-review")]
         public bool CreateNewReview(tbReviewViewModel model)
@@ -169,8 +179,10 @@ namespace BoardBooking.Controllers
             if (check) return true;
             return false;
         }
+
         // Manager API
 
+        //checked
         [HttpGet]
         [Route("api/get-store")]
         public tbStoreViewModel GetStoreIdLoginManager(string phone, string password)
@@ -190,6 +202,7 @@ namespace BoardBooking.Controllers
             return checkStore;
         }
 
+        //checked
         [HttpGet]
         [Route("api/get-appoinment-store")]
         public List<tbAppointmentViewModel> GetListAppointmentFromToday(int storeId)
@@ -207,8 +220,9 @@ namespace BoardBooking.Controllers
             return result;
         }
 
+        //checked
         [HttpGet]
-        [Route("api/get_session")]
+        [Route("api/get-session")]
         public List<tbSessionViewModel> GetListSessionFromToday(int storeId)
         {
             var sessionApi = new tbSessionApi();
@@ -217,5 +231,52 @@ namespace BoardBooking.Controllers
             return listSession;
         }
 
+        //
+        [HttpGet]
+        [Route("api/get-promotion-store")]
+        public List<tbPromotionViewModel> GetListPromotionOfStore(int storeId)
+        {
+            var promotionApi = new tbPromotionApi();
+            DateTime now = DateTime.Now;
+            var promotions = promotionApi.Get().Where(q => q.SID == storeId).ToList();
+            return promotions;
+        }
+
+        //unchecked
+        [HttpPost]
+        [Route("api/create-session")]
+        public bool CreateSessionByManager(tbSessionViewModel model)
+        {
+            var sessionApi = new tbSessionApi();
+            var check = sessionApi.Get().Where(q => q.DayCreate == model.DayCreate).FirstOrDefault();
+            if (check == null)
+            {
+                sessionApi.CreateSession(model);
+                return true;
+            }
+            return false;
+        }
+
+        // uncheck
+        [HttpPost]
+        [Route("api/create-promotion")]
+        public bool CreatePromotion(tbPromotionViewModel model)
+        {
+            var promotionApi = new tbPromotionApi();
+            var check = promotionApi.CreatePromotion(model);
+            if (check) return true;
+            return false;
+        }
+
+        // fault
+        [HttpPost]
+        [Route("apit/update-appointment-status")]
+        public bool UpdateAppointmentStatus(tbAppointmentViewModel model)
+        {
+            var appointmentApi = new tbAppointmentApi();
+            //var check = appointmentApi.UpdateAppointment(model);
+            //if (check) return true;
+            return false;
+        }
     }
 }
